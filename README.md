@@ -6,14 +6,16 @@ This project contains a set of scripts designed to automate the setup of a deplo
 
 - **scripts/**: Contains the main scripts for setting up the environment.
   - **01.init.base.sh**: Initial setup script for basic configurations.
-  - **02.node-setup.sh**: Installs Node.js.
-  - **03.package-managers.sh**: Installs PM2, PNPM, and NVM.
+  - **02.init.node.sh**: Installs Node.js, PNPM.
+  - **03.init.pm2.sh**: Installs PM2.
+  - **04.init.nginx.sh**: Installs nginx.
+  - **05.init.docker.sh**: Installs docker.
   - **utils/**: Contains utility functions for reuse across scripts.
     - **helpers.sh**: Utility functions for error handling and logging.
   
 - **configs/**: Contains configuration files for the installed tools.
   - **home**: Configuration settings in the user home dir.
-  - **nginx**: Configuration settings for nginx.
+  - **ssh**: Configuration settings for ssh.
 
 - **README.md**: Documentation for the project.
 
