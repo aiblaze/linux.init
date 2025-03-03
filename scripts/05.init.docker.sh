@@ -1,52 +1,54 @@
 #!/bin/bash
 
-# AlmaLinux Docker Installation Script
-# 1. Configure Alibaba Cloud Docker repository
-# 2. Install Docker
-# 3. Configure Docker image acceleration
-# 4. Start and verify Docker installation
+# Source helper functions
+source ./scripts/utils/helpers.sh
 
-# Set colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-NC='\033[0m' # No Color
+log_section "Docker Installation and Configuration"
 
-# Check if script is run as root
-if [ "$(id -u)" -ne 0 ]; then
-    echo -e "${RED}This script must be run as root${NC}" >&2
-    exit 1
-fi
+# Check if running as root
+check_root
 
-echo -e "${YELLOW}Starting Docker installation for AlmaLinux...${NC}"
+log "Starting Docker installation for AlmaLinux..."
 
-# Step 1: Configure Alibaba Cloud Docker mirror repository
-echo -e "${YELLOW}Step 1: Configuring Alibaba Cloud Docker repository...${NC}"
-dnf -y install dnf-utils
-dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to add Docker repository.${NC}" >&2
-    exit 1
-fi
-echo -e "${GREEN}Docker repository configured successfully.${NC}"
+# Step 1: Configure Docker mirror repository
+log "Configuring Docker repository..."
+execute "dnf -y install dnf-utils" "Failed to install dnf-utils" "dnf-utils installed successfully"
+execute "dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo" "Failed to add Docker repository" "Docker repository configured successfully"
 
 # Step 2: Install Docker
-echo -e "${YELLOW}Step 2: Installing Docker...${NC}"
-dnf -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Docker installation failed.${NC}" >&2
-    exit 1
-fi
-echo -e "${GREEN}Docker installed successfully.${NC}"
+log "Installing Docker packages..."
+execute "dnf -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin" "Docker installation failed" "Docker installed successfully"
 
 # Step 3: Configure Docker image acceleration
-echo -e "${YELLOW}Step 3: Configuring Docker image acceleration...${NC}"
-mkdir -p /etc/docker
+log "Configuring Docker image acceleration..."
+execute "mkdir -p /etc/docker" "Failed to create Docker configuration directory" "Docker configuration directory created"
+
+# Create Docker daemon configuration file with registry mirror
+log "Setting up Docker daemon configuration..."
+
+# Check for environment variable, then command line argument, then use default
+DEFAULT_MIRROR="https://n3zlurtb.mirror.aliyuncs.com"
+REGISTRY_MIRROR=${DOCKER_REGISTRY_MIRROR:-${1:-$DEFAULT_MIRROR}}
+
+log "Detected registry mirror: $REGISTRY_MIRROR"
+
+# Ask if user wants to use a different registry mirror
+if confirm_action "Do you want to use the current registry mirror ($REGISTRY_MIRROR)?"; then
+  log "Using registry mirror: $REGISTRY_MIRROR"
+else
+  read -p "Enter your preferred Docker registry mirror URL: " custom_mirror
+  if [ -n "$custom_mirror" ]; then
+    REGISTRY_MIRROR="$custom_mirror"
+    log "Using custom registry mirror: $REGISTRY_MIRROR"
+  else
+    log_warning "No mirror provided, using default: $REGISTRY_MIRROR"
+  fi
+fi
+
+# Create the daemon.json file
 cat > /etc/docker/daemon.json <<EOF
 {
-  "registry-mirrors": ["https://n3zlurtb.mirror.aliyuncs.com"],
+  "registry-mirrors": ["$REGISTRY_MIRROR"],
   "log-driver": "json-file",
   "log-opts": {
     "max-size": "100m",
@@ -56,35 +58,53 @@ cat > /etc/docker/daemon.json <<EOF
 }
 EOF
 
-echo -e "${GREEN}Docker image acceleration configured.${NC}"
+if [ $? -ne 0 ]; then
+  log_error "Failed to create Docker daemon configuration file"
+  exit 1
+fi
+log "Docker daemon configuration file created successfully"
 
 # Step 4: Start Docker and enable on boot
-echo -e "${YELLOW}Step 4: Starting Docker service...${NC}"
-systemctl enable docker
-systemctl start docker
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to start Docker service.${NC}" >&2
-    exit 1
-fi
-echo -e "${GREEN}Docker service started successfully.${NC}"
+log "Starting Docker service..."
+execute "systemctl enable docker" "Failed to enable Docker service" "Docker service enabled successfully"
+execute "systemctl start docker" "Failed to start Docker service" "Docker service started successfully"
 
 # Step 5: Verify Docker installation
-echo -e "${YELLOW}Step 5: Verifying Docker installation...${NC}"
-docker --version
-docker run hello-world
+log "Verifying Docker installation..."
+if command_exists "docker"; then
+  docker_version=$(docker --version)
+  log "Docker version: $docker_version"
+else
+  log_error "Docker command not found. Installation may have failed."
+  exit 1
+fi
 
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Docker verification failed. Please check your installation.${NC}" >&2
-    exit 1
+# Run hello-world container to verify Docker functionality
+log "Running test container to verify Docker functionality..."
+if execute "docker run --rm hello-world" "Docker test container failed" "Docker test container ran successfully"; then
+  :  # No-op, continue
+else
+  log_warning "Docker may not be functioning properly. You might need to restart the system."
 fi
 
 # Display Docker info
-echo -e "${GREEN}Docker has been successfully installed and verified!${NC}"
-echo -e "${YELLOW}Docker Version:${NC}"
-docker version
+log "Docker installation details:"
+execute "docker version --format '{{.Server.Version}}'" "Failed to get Docker version" "Docker Server version"
 
-echo -e "${YELLOW}Docker Info:${NC}"
-docker info | grep "Registry Mirrors" -A 3
+# Display registry mirrors
+log "Docker registry mirrors configuration:"
+if execute "docker info | grep 'Registry Mirrors' -A 3" "Failed to get mirror information" ""; then
+  :  # No-op, continue
+else
+  log_warning "Could not verify registry mirrors configuration."
+  log "Current daemon.json content:"
+  cat /etc/docker/daemon.json
+fi
 
-echo -e "${GREEN}Docker installation completed successfully.${NC}"
+log "Docker post-installation steps:"
+log "1. To use Docker without sudo, add your user to the docker group:"
+log "   sudo usermod -aG docker your-user"
+log "2. Log out and log back in to apply the changes"
+log "3. Test with: docker run hello-world"
+
+log "Docker installation and configuration completed successfully."

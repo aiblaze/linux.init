@@ -1,15 +1,26 @@
 #!/bin/bash
 
 # Initial setup script for the project
-# This script may include basic configurations or environment setups required before executing other scripts.
+source ./scripts/utils/helpers.sh
+
+log "Starting initial system setup..."
 
 # Update the system
-sudo dnf update -y
+log "Updating system packages..."
+if sudo dnf update -y; then
+    log "System packages updated successfully."
+else
+    log_error "Failed to update system packages."
+    exit 1
+fi
 
 # Install necessary dependencies
-sudo dnf install -y curl wget git
+log "Installing required dependencies..."
+if sudo dnf install -y curl wget git; then
+    log "Dependencies installed successfully."
+else
+    log_error "Failed to install dependencies."
+    exit 1
+fi
 
-# Set environment variables if needed
-# export SOME_VARIABLE=value
-
-echo "Initial setup completed."
+log "Initial setup completed successfully."
