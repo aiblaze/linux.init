@@ -1,5 +1,28 @@
 #!/bin/bash
 
+#############################################################
+# Node.js 环境安装与配置脚本
+# 
+# 功能：
+# - 安装 Node.js 运行环境
+# - 安装 PNPM 包管理器
+# - 可选安装 NVM (Node Version Manager)
+# - 验证安装并显示版本信息
+#
+# 环境变量：
+# - NODEJS_VERSION: Node.js 版本 (默认: "23.x")
+# - NODEJS_SOURCE: RPM 系统的 Node.js 源
+# - NODEJS_DEB_SOURCE: Debian 系统的 Node.js 源
+# - PNPM_VERSION: PNPM 版本 (默认: "latest")
+# - NVM_VERSION: NVM 版本 (默认: "0.40.1")
+# - NVM_DIR: NVM 安装目录 (默认: "$HOME/.nvm")
+# - INSTALL_NVM: 是否安装 NVM (默认: false)
+#
+# 支持的系统：
+# - Debian/Ubuntu 系列
+# - RHEL/CentOS/AlmaLinux 系列
+#############################################################
+
 # Source helper functions
 source ./scripts/utils/helpers.sh
 

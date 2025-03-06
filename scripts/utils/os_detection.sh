@@ -1,5 +1,28 @@
 #!/bin/bash
 
+#############################################################
+# 操作系统检测脚本
+# 
+# 功能：
+# - 自动检测 Linux 发行版类型和版本
+# - 确定适当的包管理器（apt, dnf, yum）
+# - 设置相应的系统更新和安装命令
+# - 将操作系统信息导出为环境变量
+#
+# 导出的变量：
+# - OS_NAME: 操作系统名称 (如 ubuntu, centos, almalinux)
+# - OS_VERSION: 操作系统版本号
+# - OS_PRETTY_NAME: 操作系统完整名称
+# - OS_FAMILY: 操作系统家族 (debian 或 rhel)
+# - PKG_MANAGER: 包管理器命令 (apt, dnf, yum)
+# - PKG_UPDATE: 系统更新命令
+# - PKG_INSTALL: 软件包安装命令
+#
+# 使用方式：
+# 在其他脚本中通过 source 命令引入：
+# source ./scripts/utils/os_detection.sh
+#############################################################
+
 # OS detection script to determine the Linux distribution and package manager
 
 # Function to detect the OS type

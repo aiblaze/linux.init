@@ -53,7 +53,7 @@ export NON_INTERACTIVE=true
 
 # Configure all necessary variables
 export NODEJS_VERSION="23.x"
-export DOCKER_REGISTRY_MIRROR="https://registry-1.docker.io"
+export DOCKER_REGISTRY_ACCELERATOR="https://n3zlurtb.mirror.aliyuncs.com"
 export PM2_VERSION="latest"
 
 # Run the installation with environment variables preserved
@@ -92,7 +92,7 @@ jobs:
       - name: Deploy and run setup script
         run: |
           scp -o StrictHostKeyChecking=no -r ./* root@${{ github.event.inputs.server_ip }}:/tmp/linux.init/
-          ssh -o StrictHostKeyChecking=no root@${{ github.event.inputs.server_ip }} "cd /tmp/linux.init && NON_INTERACTIVE=true NODEJS_VERSION=23.x DOCKER_REGISTRY_MIRROR=https://registry-1.docker.io bash install.sh"
+          ssh -o StrictHostKeyChecking=no root@${{ github.event.inputs.server_ip }} "cd /tmp/linux.init && NON_INTERACTIVE=true NODEJS_VERSION=23.x DOCKER_REGISTRY_ACCELERATOR=https://n3zlurtb.mirror.aliyuncs.com bash install.sh"
 ```
 
 ## Configuration Variables
@@ -118,22 +118,38 @@ sudo -E bash install.sh  # -E preserves environment variables
 export NVM_VERSION="0.40.1"  # Default is 0.40.1
 export NVM_DIR="$HOME/.nvm"  # Default installation directory
 export NVM_INSTALL_URL="https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh"
+export INSTALL_NVM="true"  # Whether to install NVM (default: false)
 
 # Run the installation
 sudo -E bash install.sh
 ```
 
-### Docker Registry Mirror
+### Docker Configuration
 
-You can specify a custom Docker registry mirror:
+Docker configuration includes two different types of "mirror" settings:
+
+1. **Docker Registry Accelerator** - For speeding up container image downloads:
 
 ```bash
-# Using a custom Docker registry mirror
-export DOCKER_REGISTRY_MIRROR="https://your-registry-mirror.com"
+# Using a custom Docker registry accelerator
+export DOCKER_REGISTRY_ACCELERATOR="https://your-registry-accelerator.com"
 sudo -E bash install.sh
 
 # Or pass it directly to the Docker script
-sudo DOCKER_REGISTRY_MIRROR="https://your-registry-mirror.com" bash scripts/05.init.docker.sh
+sudo DOCKER_REGISTRY_ACCELERATOR="https://your-registry-accelerator.com" bash scripts/05.init.docker.sh
+```
+
+2. **Docker Package Repository** - For installing Docker software packages:
+
+```bash
+# Use official Docker package repositories instead of Aliyun mirrors
+export USE_OFFICIAL_DOCKER_REPO="true"
+sudo -E bash install.sh
+
+# Or customize the repository URLs directly
+export DOCKER_REPO_DEBIAN="https://your-custom-repo/docker-ce/linux"
+export DOCKER_REPO_RHEL="https://your-custom-repo/docker-ce/linux/centos/docker-ce.repo"
+sudo -E bash install.sh
 ```
 
 ## Installation Steps
@@ -166,9 +182,12 @@ The installation process includes the following steps:
 
   - Docker CE installation
   - Docker Compose installation
-  - Registry mirror configuration for faster downloads
-    - Default mirror: https://n3zlurtb.mirror.aliyuncs.com
-    - Can be customized via `DOCKER_REGISTRY_MIRROR` environment variable
+  - Registry accelerator configuration for faster image downloads
+    - Default accelerator: https://n3zlurtb.mirror.aliyuncs.com
+    - Can be customized via `DOCKER_REGISTRY_ACCELERATOR` environment variable
+  - Package repository configuration
+    - Default: Aliyun mirrors (for better connectivity in China)
+    - Can be customized via `USE_OFFICIAL_DOCKER_REPO` environment variable
 
 6. Configuration Files (99.init.conf.sh)
 
@@ -178,17 +197,27 @@ The installation process includes the following steps:
 
 ## Configuration Details
 
-### Docker Registry Mirror
+### Docker Registry Accelerator
 
-The Docker setup configures a registry mirror to speed up image downloads:
+The Docker setup configures a registry accelerator to speed up container image downloads:
 
-- Default mirror: `https://n3zlurtb.mirror.aliyuncs.com`
+- Default accelerator: `https://n3zlurtb.mirror.aliyuncs.com`
 - You can customize this by:
 
-  - Setting the `DOCKER_REGISTRY_MIRROR` environment variable
-  - Passing the mirror URL as the first argument to the script
+  - Setting the `DOCKER_REGISTRY_ACCELERATOR` environment variable
   - Responding to the interactive prompt during installation
   - The configuration is stored in `/etc/docker/daemon.json`
+
+### Docker Package Repository
+
+The Docker setup uses package repositories to install Docker software:
+
+- Default for China users: Aliyun mirrors
+  - Debian/Ubuntu: `https://mirrors.aliyun.com/docker-ce/linux`
+  - RHEL/CentOS: `https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo`
+- Official repositories (can be enabled with `USE_OFFICIAL_DOCKER_REPO=true`):
+  - Debian/Ubuntu: `https://download.docker.com/linux`
+  - RHEL/CentOS: `https://download.docker.com/linux/centos/docker-ce.repo`
 
 ### SSH Settings
 
@@ -227,13 +256,18 @@ You can customize the installation by:
 | `NVM_VERSION` | NVM version to install | `0.40.1` |
 | `NVM_DIR` | NVM installation directory | `$HOME/.nvm` |
 | `NVM_INSTALL_URL` | URL for NVM installation script | Based on `NVM_VERSION` |
+| `INSTALL_NVM` | Whether to install NVM | `false` |
 | `PNPM_VERSION` | PNPM version to install | `latest` |
 | `PM2_VERSION` | PM2 version to install | `latest` |
-| `DOCKER_REGISTRY_MIRROR` | Docker registry mirror URL | `https://n3zlurtb.mirror.aliyuncs.com` |
+| `DOCKER_REGISTRY_ACCELERATOR` | Docker registry accelerator URL | `https://n3zlurtb.mirror.aliyuncs.com` |
 | `DOCKER_LOG_MAX_SIZE` | Maximum size of Docker container logs | `100m` |
 | `DOCKER_LOG_MAX_FILE` | Maximum number of Docker log files | `3` |
 | `DOCKER_STORAGE_DRIVER` | Docker storage driver | `overlay2` |
+| `USE_OFFICIAL_DOCKER_REPO` | Use official Docker package repositories | `false` |
+| `DOCKER_REPO_DEBIAN` | Custom Debian Docker package repository URL | Aliyun mirror |
+| `DOCKER_REPO_RHEL` | Custom RHEL Docker package repository URL | Aliyun mirror |
 | `NPM_REGISTRY` | NPM registry URL | Default npm registry |
+| `TIMEZONE` | System timezone | `Asia/Shanghai` |
 
 ## Troubleshooting
 
@@ -254,11 +288,16 @@ You can customize the installation by:
   - Check configuration: `nginx -t`
   - View logs: `journalctl -u nginx`
 
-4. Docker registry mirror issues
+4. Docker registry accelerator issues
 
-  - Verify your mirror configuration: `cat /etc/docker/daemon.json`
-  - Test connectivity: `curl -I https://your-registry-mirror.com/v2/`
+  - Verify your accelerator configuration: `cat /etc/docker/daemon.json`
+  - Test connectivity: `curl -I https://your-registry-accelerator.com/v2/`
   - Restart Docker after changes: `systemctl restart docker`
+
+5. Docker package repository issues
+
+  - For China users experiencing connection issues, try using Aliyun mirrors (default)
+  - For users outside China, try setting `USE_OFFICIAL_DOCKER_REPO=true`
 
 ### Logs
 

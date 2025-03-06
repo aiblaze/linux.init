@@ -1,5 +1,19 @@
 #!/bin/bash
 
+#############################################################
+# 基础系统初始化脚本
+# 
+# 功能：
+# - 更新系统软件包
+# - 安装基础依赖工具（curl, wget, git）
+# - 根据操作系统类型安装额外的必要工具
+# - 为后续安装脚本准备环境
+#
+# 支持的系统：
+# - Debian/Ubuntu 系列
+# - RHEL/CentOS/AlmaLinux 系列
+#############################################################
+
 # Initial setup script for the project
 source ./scripts/utils/helpers.sh
 
