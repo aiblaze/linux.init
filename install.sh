@@ -3,15 +3,21 @@
 # Source helper functions
 source ./scripts/utils/helpers.sh
 
-# Main installation script for setting up the environment on AlmaLinux
-log_section "AlmaLinux Environment Setup"
+# Set strict error handling for non-interactive mode
+if [ "$NON_INTERACTIVE" = "true" ]; then
+  log "Running in non-interactive mode. Strict error handling enabled."
+  set -e
+fi
+
+# Main installation script for setting up the environment on Linux
+log_section "Linux Environment Setup"
 log "Starting installation process..."
 
 # Check if running as root
 check_root
 
 # Create log file for the installation
-INSTALL_LOG_DIR="/var/log/almalinux.init"
+INSTALL_LOG_DIR="/var/log/linux.init"
 INSTALL_LOG="$INSTALL_LOG_DIR/install-$(date +%Y%m%d-%H%M%S).log"
 ensure_directory "$INSTALL_LOG_DIR"
 log "Installation log will be saved to: $INSTALL_LOG"
@@ -28,7 +34,10 @@ run_script() {
     return 0
   else
     log_error "Failed to complete: $description"
-    if confirm_action "Do you want to continue with the next step?"; then
+    if [ "$NON_INTERACTIVE" = "true" ]; then
+      log_error "Non-interactive mode: Aborting installation due to failure in: $description"
+      exit 1
+    elif confirm_action "Do you want to continue with the next step?"; then
       return 0
     else
       log_error "Installation aborted by user after failure in: $description"
@@ -36,6 +45,27 @@ run_script() {
     fi
   fi
 }
+
+# Display system information
+display_system_info
+
+# Display configuration
+if [ "$NON_INTERACTIVE" = "true" ]; then
+  log_section "Configuration Variables"
+  log "NON_INTERACTIVE: $NON_INTERACTIVE"
+  log "NODEJS_VERSION: ${NODEJS_VERSION:-default}"
+  log "NODEJS_SOURCE: ${NODEJS_SOURCE:-default}"
+  log "NODEJS_DEB_SOURCE: ${NODEJS_DEB_SOURCE:-default}"
+  log "PNPM_VERSION: ${PNPM_VERSION:-default}"
+  log "NVM_VERSION: ${NVM_VERSION:-default}"
+  log "NVM_DIR: ${NVM_DIR:-default}"
+  log "PM2_VERSION: ${PM2_VERSION:-default}"
+  log "DOCKER_REGISTRY_MIRROR: ${DOCKER_REGISTRY_MIRROR:-default}"
+  log "DOCKER_LOG_MAX_SIZE: ${DOCKER_LOG_MAX_SIZE:-default}"
+  log "DOCKER_LOG_MAX_FILE: ${DOCKER_LOG_MAX_FILE:-default}"
+  log "DOCKER_STORAGE_DRIVER: ${DOCKER_STORAGE_DRIVER:-default}"
+  log "NPM_REGISTRY: ${NPM_REGISTRY:-default}"
+fi
 
 # Step 1: Run the initial setup script
 run_script "./scripts/01.init.base.sh" "Initial system setup"

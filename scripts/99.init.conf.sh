@@ -5,6 +5,15 @@ source ./scripts/utils/helpers.sh
 
 log_section "Initializing Configuration Files"
 
+# Set default values for configuration variables
+NPM_REGISTRY=${NPM_REGISTRY:-""}
+
+# Log configuration
+if [ -n "$NPM_REGISTRY" ]; then
+    log "Using NPM configuration:"
+    log "NPM Registry: $NPM_REGISTRY"
+fi
+
 # Check if running with appropriate permissions
 log "Checking permissions for SSH configuration..."
 if [ ! -w "/etc/ssh" ] && [ "$(id -u)" -ne 0 ]; then
@@ -96,7 +105,7 @@ if [ -d "./configs/ssh" ]; then
                     log_error "Failed to create directory: $dest_dir"
                     continue
                 }
-            fi
+            }
             
             safe_copy "$file" "$dest_path"
         done
@@ -128,8 +137,17 @@ if [ -d "./configs/ssh" ]; then
         execute "sudo service sshd reload" "Failed to reload SSH service" "SSH service reloaded successfully"
     fi
 else
-    log_error "The 'configs/ssh' directory doesn't exist in the current location"
-    exit 1
+    log_warning "The 'configs/ssh' directory doesn't exist in the current location. Skipping SSH configuration."
+fi
+
+# Configure NPM registry if specified
+if [ -n "$NPM_REGISTRY" ] && command_exists "npm"; then
+    log "Configuring NPM registry..."
+    execute "npm config set registry $NPM_REGISTRY" "Failed to set NPM registry" "NPM registry set to $NPM_REGISTRY"
+    
+    # Verify the registry setting
+    npm_current_registry=$(npm config get registry)
+    log "Current NPM registry: $npm_current_registry"
 fi
 
 log "Configuration files initialization completed successfully!"

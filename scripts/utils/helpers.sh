@@ -2,6 +2,12 @@
 
 # Utility functions for the init scripts
 
+# Source OS detection script
+source ./scripts/utils/os_detection.sh
+
+# Set default value for non-interactive mode
+NON_INTERACTIVE=${NON_INTERACTIVE:-false}
+
 # Colors for better output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -44,7 +50,7 @@ install_if_not_installed() {
   local package="$1"
   if ! command_exists "$package"; then
     log "Installing $package..."
-    sudo dnf install -y "$package" || {
+    sudo $PKG_INSTALL "$package" || {
       log_error "Failed to install $package."
       return 1
     }
@@ -89,6 +95,18 @@ confirm_action() {
   local prompt="$1"
   local default="${2:-y}"
   
+  # In non-interactive mode, always return the default value
+  if [ "$NON_INTERACTIVE" = "true" ]; then
+    if [[ "$default" = "y" ]]; then
+      log "Non-interactive mode: Automatically choosing default option (Yes) for: $prompt"
+      return 0
+    else
+      log "Non-interactive mode: Automatically choosing default option (No) for: $prompt"
+      return 1
+    fi
+  fi
+  
+  # Interactive mode logic
   local prompt_text
   if [[ "$default" = "y" ]]; then
     prompt_text="$prompt [Y/n]: "
@@ -136,5 +154,51 @@ ensure_directory() {
       return 1
     }
   fi
+  return 0
+}
+
+# Function to display system information
+display_system_info() {
+  log_section "System Information"
+  display_os_info
+  log "Kernel: $(uname -r)"
+  log "Architecture: $(uname -m)"
+  log "Hostname: $(hostname)"
+}
+
+# Function to add a repository based on OS family
+add_repository() {
+  local repo_name="$1"
+  local repo_url="$2"
+  
+  log "Adding repository: $repo_name"
+  
+  case "$OS_FAMILY" in
+    "debian")
+      if ! command_exists "add-apt-repository"; then
+        sudo $PKG_INSTALL software-properties-common
+      fi
+      sudo add-apt-repository -y "$repo_url" || {
+        log_error "Failed to add repository: $repo_name"
+        return 1
+      }
+      sudo $PKG_UPDATE
+      ;;
+    "rhel")
+      if ! command_exists "dnf-plugins-core" && [ "$PKG_MANAGER" = "dnf" ]; then
+        sudo $PKG_INSTALL dnf-plugins-core
+      fi
+      sudo $PKG_MANAGER config-manager --add-repo "$repo_url" || {
+        log_error "Failed to add repository: $repo_name"
+        return 1
+      }
+      ;;
+    *)
+      log_error "Unsupported OS family for adding repository: $OS_FAMILY"
+      return 1
+      ;;
+  esac
+  
+  log "Repository added successfully: $repo_name"
   return 0
 }

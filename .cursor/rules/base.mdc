@@ -1,0 +1,6 @@
+---
+description: When generate the scripts
+globs: *.sh
+alwaysApply: true
+---
+- Make sure the shell scripts should work on Almalinx 9.x, centos and ubuntu os.
