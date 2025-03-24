@@ -31,7 +31,7 @@ check_root
 # 1. Docker Registry Accelerator (镜像加速器)：
 #    - 用于加速从 Docker Hub 等公共镜像仓库拉取容器镜像
 #    - 配置在 daemon.json 的 registry-mirrors 字段中
-#    - 例如：https://n3zlurtb.mirror.aliyuncs.com
+#    - 例如：https://{你的镜像加速ID}.mirror.aliyuncs.com
 #
 # 2. Docker Package Repository (软件包仓库)：
 #    - 用于安装 Docker 引擎软件包本身
@@ -41,7 +41,7 @@ check_root
 
 # Set default values for configuration variables
 # Docker Registry Accelerator - 用于加速 Docker 镜像拉取
-DEFAULT_REGISTRY_ACCELERATOR="https://n3zlurtb.mirror.aliyuncs.com"
+DEFAULT_REGISTRY_ACCELERATOR="https://mirrors.tuna.tsinghua.edu.cn/"
 DOCKER_REGISTRY_ACCELERATOR=${DOCKER_REGISTRY_ACCELERATOR:-$DEFAULT_REGISTRY_ACCELERATOR}
 DOCKER_LOG_MAX_SIZE=${DOCKER_LOG_MAX_SIZE:-"100m"}
 DOCKER_LOG_MAX_FILE=${DOCKER_LOG_MAX_FILE:-"3"}

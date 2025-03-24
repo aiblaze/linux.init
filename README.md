@@ -183,7 +183,7 @@ The installation process includes the following steps:
   - Docker CE installation
   - Docker Compose installation
   - Registry accelerator configuration for faster image downloads
-    - Default accelerator: https://n3zlurtb.mirror.aliyuncs.com
+    - Default accelerator: https://mirrors.tuna.tsinghua.edu.cn/
     - Can be customized via `DOCKER_REGISTRY_ACCELERATOR` environment variable
   - Package repository configuration
     - Default: Aliyun mirrors (for better connectivity in China)
@@ -201,7 +201,7 @@ The installation process includes the following steps:
 
 The Docker setup configures a registry accelerator to speed up container image downloads:
 
-- Default accelerator: `https://n3zlurtb.mirror.aliyuncs.com`
+- Default accelerator: `https://mirrors.tuna.tsinghua.edu.cn/`
 - You can customize this by:
 
   - Setting the `DOCKER_REGISTRY_ACCELERATOR` environment variable
