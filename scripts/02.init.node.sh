@@ -29,7 +29,7 @@ source ./scripts/utils/helpers.sh
 log_section "Node.js Environment Setup"
 
 # Set default values for configuration variables
-NODEJS_VERSION=${NODEJS_VERSION:-"23.x"}
+NODEJS_VERSION=${NODEJS_VERSION:-"24.x"}
 NODEJS_SOURCE=${NODEJS_SOURCE:-"https://rpm.nodesource.com/setup_${NODEJS_VERSION}"}
 NODEJS_DEB_SOURCE=${NODEJS_DEB_SOURCE:-"https://deb.nodesource.com/setup_${NODEJS_VERSION}"}
 PNPM_VERSION=${PNPM_VERSION:-"latest"}

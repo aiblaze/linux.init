@@ -6,7 +6,7 @@ This project provides an automated setup for a deployment environment on various
 
 This toolset automates the installation and configuration of:
 
-- Node.js, npm, PNPM, and NVM
+- Bun, Node.js, npm, PNPM, and NVM
 - PM2 process manager
 - Nginx web server with optimized configuration (based on H5BP)
 - Docker and Docker Compose
@@ -189,7 +189,11 @@ The installation process includes the following steps:
     - Default: Aliyun mirrors (for better connectivity in China)
     - Can be customized via `USE_OFFICIAL_DOCKER_REPO` environment variable
 
-6. Configuration Files (99.init.conf.sh)
+6. Install Bun (06.init.bun.sh)
+
+  - Bun Runtime installation
+
+7. Configuration Files (99.init.conf.sh)
 
   - SSH timeout settings (prevents idle disconnections)
   - Shell configurations (.bashrc)
