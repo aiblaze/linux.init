@@ -82,6 +82,9 @@ run_script "./scripts/04.init.nginx.sh" "Nginx setup"
 # Step 5: Install Docker
 run_script "./scripts/05.init.docker.sh" "Docker installation"
 
+# Step 6: Install Bun
+run_script "./scripts/06.init.bun.sh" "Bun installation"
+
 # Step Final: Initialize configuration files
 run_script "./scripts/99.init.conf.sh" "Configuration files setup"
 
