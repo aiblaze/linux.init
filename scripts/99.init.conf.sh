@@ -116,11 +116,11 @@ if [ -d "./configs/ssh" ]; then
             
             # Create destination directory if it doesn't exist
             if [ ! -d "$dest_dir" ]; then
-                mkdir -p "$dest_dir" || {
+                if ! mkdir -p "$dest_dir"; then
                     log_error "Failed to create directory: $dest_dir"
                     continue
-                }
-            }
+                fi
+            fi
             
             safe_copy "$file" "$dest_path"
         done
@@ -134,11 +134,11 @@ if [ -d "./configs/ssh" ]; then
             
             # Create destination directory if it doesn't exist
             if [ ! -d "$dest_dir" ]; then
-                sudo mkdir -p "$dest_dir" || {
+                if ! sudo mkdir -p "$dest_dir"; then
                     log_error "Failed to create directory: $dest_dir"
                     continue
-                }
-            }
+                fi
+            fi
             
             safe_copy "$file" "$dest_path" true
         done
