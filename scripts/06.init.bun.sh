@@ -25,7 +25,7 @@ fi
 
 # 安装 Bun
 log "Installing Bun..."
-execute "curl -fsSL https://bun.sh/install | bash" "Failed to install Bun" "Bun installed successfully"
+execute "BUN_INSTALL_MIRROR=https://registry.npmmirror.com/binary.html?path=bun/ curl -fsSL https://bun.sh/install | bash" "Failed to install Bun" "Bun installed successfully"
 
 # 配置环境变量
 export BUN_INSTALL="$HOME/.bun"
